@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Dashboard - Electricity Billing</title>
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@3.3.15/dist/vuetify.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <v-app theme="light">
+            <!-- Navigation Drawer -->
+            <v-navigation-drawer permanent app color="white" elevation="1">
+                <div class="d-flex align-center pa-4">
+                    <v-avatar color="primary" size="40" class="mr-3">
+                        <v-icon color="white">mdi-lightning-bolt</v-icon>
+                    </v-avatar>
+                    <div>
+                        <div class="text-h6 font-weight-bold">PowerBill</div>
+                        <div class="text-caption text-grey">Customer Portal</div>
+                    </div>
+                </div>
+                
+                <v-divider></v-divider>
+
+                <v-list nav class="mt-2">
+                    <v-list-item 
+                        prepend-icon="mdi-view-dashboard" 
+                        title="Dashboard" 
+                        value="dashboard"
+                        @click="tab = 'dashboard'"
+                        :active="tab === 'dashboard'"
+                        color="primary"
+                        rounded="lg"
+                    ></v-list-item>
+                    <v-list-item 
+                        prepend-icon="mdi-file-document-multiple" 
+                        title="My Bills" 
+                        value="bills"
+                        @click="tab = 'bills'"
+                        :active="tab === 'bills'"
+                        color="primary"
+                        rounded="lg"
+                    ></v-list-item>
+                    <v-list-item 
+                        prepend-icon="mdi-lifebuoy" 
+                        title="Support & Feedback" 
+                        value="support"
+                        @click="tab = 'support'"
+                        :active="tab === 'support'"
+                        color="primary"
+                        rounded="lg"
+                    ></v-list-item>
+                    <v-list-item 
+                        prepend-icon="mdi-account-circle" 
+                        title="My Profile" 
+                        value="profile"
+                        @click="tab = 'profile'"
+                        :active="tab === 'profile'"
+                        color="primary"
+                        rounded="lg"
+                    ></v-list-item>
+                </v-list>
+                
+                <template v-slot:append>
+                    <div class="pa-4">
+                        <v-btn block color="error" variant="tonal" @click="logout">
+                            <v-icon start>mdi-logout</v-icon> Logout
+                        </v-btn>
+                    </div>
+                </template>
+            </v-navigation-drawer>
+
+            <!-- App Bar -->
+            <v-app-bar elevation="0" border>
+                <v-app-bar-title class="font-weight-bold">
+                    {{ tab === 'dashboard' ? 'Dashboard' : tab === 'bills' ? 'My Bills' : tab === 'profile' ? 'My Profile' : 'Support & Feedback' }}
+                </v-app-bar-title>
+                <v-spacer></v-spacer>
+                <div class="mr-4 d-flex align-center">
+                    <v-avatar color="grey-lighten-3" class="mr-2">
+                        <v-icon>mdi-account</v-icon>
+                    </v-avatar>
+                    <div class="d-none d-sm-block">
+                        <div class="text-subtitle-2">{{ user.full_name }}</div>
+                        <div class="text-caption text-grey">{{ user.role }}</div>
+                    </div>
+                </div>
+            </v-app-bar>
+
+            <!-- Main Content -->
+            <v-main class="bg-grey-lighten-4">
+                <v-container fluid class="pa-6">
+                    <v-window v-model="tab">
+                        <!-- Dashboard Tab -->
+                        <v-window-item value="dashboard">
+                            <v-row>
+                                <!-- Statistics Cards -->
+                                <v-col cols="12" sm="6" md="3">
+                                    <v-card elevation="0">
+                                        <v-card-text>
+                                            <div class="text-overline mb-1">Total Bills</div>
+                                            <div class="text-h4 font-weight-bold text-primary">{{ bills.length }}</div>
+                                        </v-card-text>
+                                    </v-card>
+                                </v-col>
+                                <v-col cols="12" sm="6" md="3">
+                                    <v-card elevation="0">
+                                        <v-card-text>
+                                            <div class="text-overline mb-1">Paid Bills</div>
+                                            <div class="text-h4 font-weight-bold text-success">{{ paidBills }}</div>
+                                        </v-card-text>
+                                    </v-card>
+                                </v-col>
+                                <v-col cols="12" sm="6" md="3">
+                                    <v-card elevation="0">
+                                        <v-card-text>
+                                            <div class="text-overline mb-1">Pending Bills</div>
+                                            <div class="text-h4 font-weight-bold text-warning">{{ pendingBills }}</div>
+                                        </v-card-text>
+                                    </v-card>
+                                </v-col>
+                                <v-col cols="12" sm="6" md="3">
+                                    <v-card elevation="0">
+                                        <v-card-text>
+                                            <div class="text-overline mb-1">Total Amount Due</div>
+                                            <div class="text-h4 font-weight-bold text-info">RM {{ totalDue.toFixed(2) }}</div>
+                                        </v-card-text>
+                                    </v-card>
+                                </v-col>
+                            </v-row>
+
+                            <v-row class="mt-4">
+                                <v-col cols="12">
+                                    <v-card elevation="0">
+                                        <v-card-title class="pa-4 border-b">Recent Bills</v-card-title>
+                                        <v-table class="ma-4 ">
+                                            <template v-slot:default>
+                                                <thead>
+                                                    <tr class="bg-grey-lighten-5">
+                                                        <th>Bill Month</th>
+                                                        <th>Units</th>
+                                                        <th>Amount</th>
+                                                        <th>Due Date</th>
+                                                        <th>Status</th>
+                                                        <th>Action</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr v-for="item in bills.slice(0, 5)" :key="item.bill_id">
+                                                        <td>{{ item.bill_month || '-' }}</td>
+                                                        <td>{{ item.units_consumed || '-' }}</td>
+                                                        <td class="font-weight-bold">RM {{ item.total_amount || '-' }}</td>
+                                                        <td>{{ formatDate(item.due_date) }}</td>
+                                                        <td>
+                                                            <v-chip :color="getStatusColor(item.status)" size="small" variant="flat">
+                                                                {{ item.status || '-' }}
+                                                            </v-chip>
+                                                        </td>
+                                                        <td>
+                                                            <v-btn 
+                                                                v-if="item.status === 'pending'"
+                                                                color="primary" 
+                                                                size="small"
+                                                                variant="flat"
+                                                                @click="openPaymentDialog(item)"
+                                                            >
+                                                                Pay Now
+                                                            </v-btn>
+                                                        </td>
+                                                    </tr>
+                                                    <tr v-if="!bills || bills.length === 0">
+                                                        <td colspan="6" class="text-center pa-4 text-grey">No bills found.</td>
+                                                    </tr>
+                                                </tbody>
+                                            </template>
+                                        </v-table>
+                                    </v-card>
+                                </v-col>
+                            </v-row>
+                        </v-window-item>
+
+                        <!-- Bills Tab -->
+                        <v-window-item value="bills">
+                            <v-card elevation="0">
+                                <v-card-title class="pa-4 border-b">
+                                    All Bills History
+                                </v-card-title>
+                                <v-table hover class="ma-4 ">
+                                    <template v-slot:default>
+                                        <thead>
+                                            <tr class="bg-grey-lighten-5">
+                                                <th>Bill Month</th>
+                                                <th>Units Consumed</th>
+                                                <th>Amount</th>
+                                                <th>Due Date</th>
+                                                <th>Status</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="item in bills" :key="item.bill_id">
+                                                <td>{{ item.bill_month || '-' }}</td>
+                                                <td>{{ item.units_consumed || '-' }}</td>
+                                                <td class="font-weight-bold">RM {{ item.total_amount || '-' }}</td>
+                                                <td>{{ formatDate(item.due_date) }}</td>
+                                                <td>
+                                                    <v-chip :color="getStatusColor(item.status)" size="small" variant="flat">
+                                                        {{ item.status || '-' }}
+                                                    </v-chip>
+                                                </td>
+                                                <td>
+                                                    <v-btn 
+                                                        v-if="item.status === 'pending'"
+                                                        color="primary" 
+                                                        size="small"
+                                                        variant="flat"
+                                                        @click="openPaymentDialog(item)"
+                                                    >
+                                                        Pay Now
+                                                    </v-btn>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </template>
+                                </v-table>
+                            </v-card>
+                        </v-window-item>
+
+                        <!-- Support Tab -->
+                        <v-window-item value="support">
+                            <!-- My Inquiries Section -->
+                            <v-row>
+                                <v-col cols="12">
+                                    <v-card elevation="0">
+                                        <v-card-title class="pa-4 border-b">
+                                            <v-icon start color="primary">mdi-message-text</v-icon> My Inquiries
+                                        </v-card-title>
+                                        <v-card-text class="pa-0">
+                                            <v-expansion-panels variant="accordion" v-if="inquiries.length > 0">
+                                                <v-expansion-panel v-for="item in inquiries" :key="item.inquiry_id">
+                                                    <v-expansion-panel-title>
+                                                        <div class="d-flex align-center justify-space-between w-100 pr-4">
+                                                            <div>
+                                                                <span class="font-weight-bold">{{ item.subject }}</span>
+                                                                <div class="text-caption text-grey">{{ formatDate(item.created_at) }}</div>
+                                                            </div>
+                                                            <v-chip :color="getInquiryStatusColor(item.status)" size="small" variant="flat">
+                                                                {{ item.status }}
+                                                            </v-chip>
+                                                        </div>
+                                                    </v-expansion-panel-title>
+                                                    <v-expansion-panel-text>
+                                                        <div class="mb-4">
+                                                            <div class="text-overline text-grey">Your Message</div>
+                                                            <div class="text-body-2 bg-grey-lighten-4 pa-3 rounded">{{ item.message }}</div>
+                                                        </div>
+                                                        <div v-if="item.response" class="mt-4">
+                                                            <div class="text-overline text-success">Response from Support</div>
+                                                            <div class="text-body-2 bg-green-lighten-5 pa-3 rounded">
+                                                                {{ item.response }}
+                                                            </div>
+                                                            <div class="text-caption text-grey mt-1" v-if="item.responded_at">
+                                                                Replied on {{ formatDate(item.responded_at) }}
+                                                                <span v-if="item.responded_by_name"> by {{ item.responded_by_name }}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div v-else class="mt-4">
+                                                            <v-alert type="info" variant="tonal" density="compact">
+                                                                Awaiting response from support team
+                                                            </v-alert>
+                                                        </div>
+                                                    </v-expansion-panel-text>
+                                                </v-expansion-panel>
+                                            </v-expansion-panels>
+                                            <div v-else class="pa-6 text-center text-grey">
+                                                <v-icon size="48" color="grey-lighten-1">mdi-message-off</v-icon>
+                                                <div class="mt-2">No inquiries submitted yet</div>
+                                            </div>
+                                        </v-card-text>
+                                    </v-card>
+                                </v-col>
+                            </v-row>
+
+                            <v-row class="mt-4">
+                                <v-col cols="12">
+                                    <v-card elevation="0" class="h-100">
+                                        <v-card-title class="pa-4 border-b">
+                                            <v-icon start color="primary">mdi-help-circle</v-icon> Submit Inquiry
+                                        </v-card-title>
+                                        <v-card-text class="pa-6">
+                                            <v-form @submit.prevent="submitInquiry">
+                                                <v-select
+                                                    v-model="inquiry.subject"
+                                                    :items="['General Question', 'Billing Issue', 'Technical Issue']"
+                                                    label="Subject"
+                                                    variant="outlined"
+                                                    density="comfortable"
+                                                    required
+                                                ></v-select>
+                                                <v-textarea
+                                                    v-model="inquiry.message"
+                                                    label="Message"
+                                                    variant="outlined"
+                                                    density="comfortable"
+                                                    rows="6"
+                                                    required
+                                                ></v-textarea>
+                                                <v-btn type="submit" color="primary" block flat size="large" :loading="inquiryLoading">
+                                                    Submit Inquiry
+                                                </v-btn>
+                                            </v-form>
+                                        </v-card-text>
+                                    </v-card>
+                                </v-col>
+                            </v-row>
+
+                            <v-row class="mt-4">
+                                <v-col cols="12">
+                                    <v-card elevation="0" class="h-100">
+                                        <v-card-title class="pa-4 border-b">
+                                            <v-icon start color="warning">mdi-star</v-icon> Submit Feedback
+                                        </v-card-title>
+                                        <v-card-text class="pa-6">
+                                            <v-form @submit.prevent="submitFeedback">
+                                                <div class="text-center mb-4">
+                                                    <div class="text-subtitle-1 mb-2">Rate our service</div>
+                                                    <v-rating
+                                                        v-model="feedback.rating"
+                                                        color="warning"
+                                                        hover
+                                                        size="large"
+                                                    ></v-rating>
+                                                </div>
+                                                <v-select
+                                                    v-model="feedback.category"
+                                                    :items="['Billing', 'Service', 'Support', 'Other']"
+                                                    label="Category"
+                                                    variant="outlined"
+                                                    density="comfortable"
+                                                ></v-select>
+                                                <v-textarea
+                                                    v-model="feedback.comments"
+                                                    label="Comments"
+                                                    variant="outlined"
+                                                    density="comfortable"
+                                                    rows="6"
+                                                ></v-textarea>
+                                                <v-btn type="submit" color="warning" block flat size="large" :loading="feedbackLoading">
+                                                    Submit Feedback
+                                                </v-btn>
+                                            </v-form>
+                                        </v-card-text>
+                                    </v-card>
+                                </v-col>
+                            </v-row>
+                        </v-window-item>
+
+                        <!-- Profile Tab -->
+                        <v-window-item value="profile">
+                            <v-row>
+                                <v-col cols="12">
+                                    <v-card elevation="0">
+                                        <v-card-title class="pa-4 border-b">
+                                            <v-icon start color="primary">mdi-account</v-icon> Profile Information
+                                        </v-card-title>
+                                        <v-card-text class="pa-6">
+                                            <v-list lines="two">
+                                                <v-list-item title="Username" :subtitle="user.username">
+                                                    <template #prepend>
+                                                        <v-icon color="grey">mdi-account</v-icon>
+                                                    </template>
+                                                </v-list-item>
+                                                <v-list-item title="Full Name" :subtitle="user.full_name"></v-list-item>
+                                                <v-list-item title="Email" :subtitle="user.email"></v-list-item>
+                                                <v-list-item title="Phone" :subtitle="user.phone || '-' "></v-list-item>
+                                                <v-list-item title="Address" :subtitle="user.address || '-' "></v-list-item>
+                                            </v-list>
+                                        </v-card-text>
+                                        <v-card-actions class="pa-4">
+                                            <v-btn color="primary" variant="flat" @click="openEditProfile">Edit Info</v-btn>
+                                            <v-btn color="secondary" variant="tonal" @click="openChangePassword">Change Password</v-btn>
+                                        </v-card-actions>
+                                    </v-card>
+                                </v-col>
+                            </v-row>
+                        </v-window-item>
+                    </v-window>
+                </v-container>
+            </v-main>
+
+            <!-- Payment Dialog -->
+            <v-dialog v-model="paymentDialog" max-width="500">
+                <v-card rounded="lg">
+                    <v-card-title class="pa-4 border-b">Make Payment</v-card-title>
+                    <v-card-text class="pa-4">
+                        <v-form @submit.prevent="makePayment">
+                            <div class="bg-blue-lighten-5 pa-4 rounded mb-4">
+                                <div class="d-flex justify-space-between mb-2">
+                                    <span class="text-grey-darken-2">Bill Month:</span>
+                                    <span class="font-weight-bold">{{ selectedBill.bill_month }}</span>
+                                </div>
+                                <div class="d-flex justify-space-between">
+                                    <span class="text-grey-darken-2">Amount Due:</span>
+                                    <span class="text-h6 text-primary font-weight-bold">RM {{ selectedBill.total_amount }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="text-subtitle-2 mb-2 font-weight-bold">
+                                <v-icon size="small" class="mr-1">mdi-wallet</v-icon>
+                                Payment Method
+                            </div>
+                            <v-btn-toggle
+                                v-model="payment.method"
+                                color="primary"
+                                variant="outlined"
+                                divided
+                                mandatory
+                                class="mb-4 w-100"
+                            >
+                                <v-btn value="Credit Card" style="width: 50%">
+                                    <v-icon start>mdi-credit-card</v-icon>
+                                    Credit Card
+                                </v-btn>
+                                <v-btn value="Debit Card" style="width: 50%">
+                                    <v-icon start>mdi-credit-card-outline</v-icon>
+                                    Debit Card
+                                </v-btn>
+                            </v-btn-toggle>
+
+                            <div class="text-subtitle-2 mb-3 font-weight-bold">
+                                <v-icon size="small" class="mr-1">mdi-credit-card-check</v-icon>
+                                Card Details
+                            </div>
+                            <v-text-field
+                                v-model="payment.card_name"
+                                label="Name on Card"
+                                variant="outlined"
+                                density="comfortable"
+                                prepend-inner-icon="mdi-account-outline"
+                                required
+                                class="mb-2"
+                            ></v-text-field>
+                            <v-text-field
+                                v-model="payment.card_number"
+                                label="Card Number"
+                                variant="outlined"
+                                density="comfortable"
+                                prepend-inner-icon="mdi-credit-card-outline"
+                                maxlength="19"
+                                placeholder="1234 5678 9012 3456"
+                                hint="We only store last 4 digits"
+                                persistent-hint
+                                required
+                                class="mb-3"
+                            ></v-text-field>
+                            <v-row>
+                                <v-col cols="6">
+                                    <v-text-field
+                                        v-model="payment.card_expiry"
+                                        label="MM/YY"
+                                        variant="outlined"
+                                        density="comfortable"
+                                        prepend-inner-icon="mdi-calendar"
+                                        placeholder="MM/YY"
+                                        maxlength="5"
+                                        required
+                                    ></v-text-field>
+                                </v-col>
+                                <v-col cols="6">
+                                    <v-text-field
+                                        v-model="payment.card_cvv"
+                                        label="CVV"
+                                        type="password"
+                                        variant="outlined"
+                                        density="comfortable"
+                                        prepend-inner-icon="mdi-lock-outline"
+                                        placeholder="123"
+                                        maxlength="4"
+                                        required
+                                    ></v-text-field>
+                                </v-col>
+                            </v-row>
+
+                            <!-- Security Notice -->
+                            <v-alert
+                                type="info"
+                                variant="tonal"
+                                density="compact"
+                                class="mt-4"
+                                icon="mdi-shield-check"
+                            >
+                                <span class="text-caption">Your payment is secure and encrypted. We never store your full card details.</span>
+                            </v-alert>
+                        </v-form>
+                    </v-card-text>
+                    <v-divider></v-divider>
+                    <v-card-actions class="pa-4">
+                        <v-spacer></v-spacer>
+                        <v-btn variant="text" @click="paymentDialog = false">Cancel</v-btn>
+                        <v-btn color="primary" variant="flat" @click="makePayment" :loading="paymentLoading">
+                            Pay Now
+                        </v-btn>
+                    </v-card-actions>
+                </v-card>
+            </v-dialog>
+
+            <!-- Edit Profile Dialog -->
+            <v-dialog v-model="editProfileDialog" max-width="600">
+                <v-card rounded="lg">
+                    <v-card-title class="pa-4 border-b">Edit Profile</v-card-title>
+                    <v-card-text class="pa-4">
+                        <v-form @submit.prevent="updateProfile">
+                            <v-text-field v-model="user.username" label="Username" variant="outlined" density="comfortable" disabled></v-text-field>
+                            <v-text-field v-model="profileForm.full_name" label="Full Name" variant="outlined" density="comfortable" required></v-text-field>
+                            <v-text-field v-model="profileForm.email" label="Email" type="email" variant="outlined" density="comfortable" required></v-text-field>
+                            <v-text-field v-model="profileForm.phone" label="Phone" variant="outlined" density="comfortable"></v-text-field>
+                            <v-textarea v-model="profileForm.address" label="Address" variant="outlined" density="comfortable" rows="2"></v-textarea>
+                        </v-form>
+                    </v-card-text>
+                    <v-card-actions class="pa-4">
+                        <v-spacer></v-spacer>
+                        <v-btn variant="text" @click="editProfileDialog = false">Cancel</v-btn>
+                        <v-btn color="primary" variant="flat" @click="updateProfile" :loading="profileSaving">Save</v-btn>
+                    </v-card-actions>
+                </v-card>
+            </v-dialog>
+
+            <!-- Change Password Dialog -->
+            <v-dialog v-model="changePasswordDialog" max-width="500">
+                <v-card rounded="lg">
+                    <v-card-title class="pa-4 border-b">Change Password</v-card-title>
+                    <v-card-text class="pa-4">
+                        <v-form @submit.prevent="changePassword">
+                            <v-text-field v-model="passwordForm.current_password" label="Current Password" type="password" variant="outlined" density="comfortable" required></v-text-field>
+                            <v-text-field v-model="passwordForm.new_password" label="New Password" type="password" variant="outlined" density="comfortable" required></v-text-field>
+                            <v-text-field v-model="passwordForm.confirm_password" label="Confirm Password" type="password" variant="outlined" density="comfortable" required></v-text-field>
+                        </v-form>
+                    </v-card-text>
+                    <v-card-actions class="pa-4">
+                        <v-spacer></v-spacer>
+                        <v-btn variant="text" @click="changePasswordDialog = false">Cancel</v-btn>
+                        <v-btn color="primary" variant="flat" @click="changePassword" :loading="passwordSaving">Update</v-btn>
+                    </v-card-actions>
+                </v-card>
+            </v-dialog>
+
+            <!-- Snackbar -->
+            <v-snackbar v-model="snackbar" :color="snackbarColor" location="top right">
+                {{ snackbarText }}
+            </v-snackbar>
+        </v-app>
+    </div>
+
+    <script src="https://unpkg.com/vue@3.3.4/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@3.3.15/dist/vuetify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.5.0/dist/axios.min.js"></script>
+    <script src="../js/customer.js"></script>
+</body>
+</html>

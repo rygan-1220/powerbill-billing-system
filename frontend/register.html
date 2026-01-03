@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Registration - Powerbill Billing System</title>
+    <!-- Vuetify CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@3.3.15/dist/vuetify.min.css" rel="stylesheet">
+    <!-- Material Design Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <v-app>
+            <v-main>
+                <v-container fluid class="fill-height register-container" style="padding-top: 40px;">
+                    <v-row align="center" justify="center">
+                        <v-col cols="12" sm="10" md="6" lg="5">
+                            <v-card class="elevation-4 rounded-lg">
+                                <v-card-title class="text-h5 text-center text-primary pa-6">
+                                    <v-icon size="40" class="mb-2" color="primary">mdi-lightning-bolt</v-icon>
+                                    <div class="font-weight-bold">Customer Registration</div>
+                                </v-card-title>
+                                
+                                <v-card-text class="pa-6">
+                                    <v-alert v-if="error" type="error" dismissible v-model="showError" class="mb-4">
+                                        {{ error }}
+                                    </v-alert>
+                                    
+                                    <v-alert v-if="success" type="success" dismissible v-model="showSuccess" class="mb-4">
+                                        {{ success }}
+                                    </v-alert>
+                                    
+                                    <v-form ref="form" @submit.prevent="register" v-model="formValid">
+                                        <v-text-field
+                                            v-model="formData.username"
+                                            label="Username *"
+                                            prepend-icon="mdi-account"
+                                            variant="outlined"
+                                            :rules="usernameRules"
+                                            required
+                                            class="mb-3"
+                                        ></v-text-field>
+                                        
+                                        <v-text-field
+                                            v-model="formData.full_name"
+                                            label="Full Name *"
+                                            prepend-icon="mdi-account-circle"
+                                            variant="outlined"
+                                            :rules="requiredRules"
+                                            required
+                                            class="mb-3"
+                                        ></v-text-field>
+                                        
+                                        <v-text-field
+                                            v-model="formData.password"
+                                            label="Password *"
+                                            prepend-icon="mdi-lock"
+                                            :type="showPassword ? 'text' : 'password'"
+                                            :append-inner-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+                                            @click:append-inner="showPassword = !showPassword"
+                                            variant="outlined"
+                                            :rules="passwordRules"
+                                            required
+                                            class="mb-3"
+                                        ></v-text-field>
+                                        
+                                        <v-text-field
+                                            v-model="formData.confirmPassword"
+                                            label="Confirm Password *"
+                                            prepend-icon="mdi-lock-check"
+                                            :type="showConfirmPassword ? 'text' : 'password'"
+                                            :append-inner-icon="showConfirmPassword ? 'mdi-eye' : 'mdi-eye-off'"
+                                            @click:append-inner="showConfirmPassword = !showConfirmPassword"
+                                            variant="outlined"
+                                            :rules="confirmPasswordRules"
+                                            required
+                                            class="mb-4"
+                                        ></v-text-field>
+                                        
+                                        <!-- PDPA Privacy Policy -->
+                                        <v-card class="pa-4 bg-grey-lighten-5 mb-4" elevation="0">
+                                            <v-card-text class="text-caption pa-2">
+                                                <div class="font-weight-bold mb-2">Personal Data Protection Policy</div>
+                                                <p class="text-justify">
+                                                    By registering, you consent to the collection, use, and disclosure of your personal 
+                                                    data for the purpose of electricity billing services, account management, and service 
+                                                    communications. Your information will be securely stored and will not be shared with 
+                                                    third parties without your consent, except as required by law. You have the right to 
+                                                    access, correct, or request deletion of your personal data at any time.
+                                                </p>
+                                            </v-card-text>
+                                        </v-card>
+                        
+                        <v-checkbox
+                            v-model="formData.agreeToPolicy"
+                                            class="mt-1"
+                                        >
+                                            <template v-slot:label>
+                                                <span class="text-body-2">
+                                                    I have read and agree to the Personal Data Protection Policy *
+                                                </span>
+                                            </template>
+                                        </v-checkbox>
+                                        
+                                        <v-btn
+                                            type="submit"
+                                            color="primary"
+                                            size="large"
+                                            block
+                                            :loading="loading"
+                                            :disabled="!formValid"
+                                        >
+                                            Register
+                                        </v-btn>
+                                        
+                                        <v-divider class="my-6"></v-divider>
+                                        
+                                        <div class="text-center">
+                                            <span class="text-body-2">Already have an account?</span>
+                                            <v-btn
+                                                variant="text"
+                                                color="primary"
+                                                @click="goToLogin"
+                                                size="small"
+                                            >
+                                                Login here
+                                            </v-btn>
+                                        </div>
+                                    </v-form>
+                                </v-card-text>
+                            </v-card>
+                        </v-col>
+                    </v-row>
+                </v-container>
+            </v-main>
+        </v-app>
+    </div>
+
+    <!-- Vue 3 -->
+    <script src="https://unpkg.com/vue@3.3.4/dist/vue.global.js"></script>
+    <!-- Vuetify -->
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@3.3.15/dist/vuetify.min.js"></script>
+    <!-- Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.5.0/dist/axios.min.js"></script>
+    
+    <script src="js/register.js"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+# Setup and documentation
+SETUP/
+Note/
+SETUP_HELPER.md
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak

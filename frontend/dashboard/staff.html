@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Dashboard - Electricity Billing</title>
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@3.3.15/dist/vuetify.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <v-app theme="light">
+            <!-- Navigation Drawer -->
+            <v-navigation-drawer permanent app color="white" elevation="1">
+                <div class="d-flex align-center pa-4">
+                    <v-avatar color="primary" size="40" class="mr-3">
+                        <v-icon color="white">mdi-account-tie</v-icon>
+                    </v-avatar>
+                    <div>
+                        <div class="text-h6 font-weight-bold">PowerBill</div>
+                        <div class="text-caption text-grey">Staff Portal</div>
+                    </div>
+                </div>
+                
+                <v-divider></v-divider>
+
+                <v-list nav class="mt-2">
+                    <v-list-item 
+                        prepend-icon="mdi-account-group" 
+                        title="Customers" 
+                        value="customers"
+                        @click="tab = 'customers'"
+                        :active="tab === 'customers'"
+                        color="primary"
+                        rounded="lg"
+                    ></v-list-item>
+                    <v-list-item 
+                        prepend-icon="mdi-file-document-multiple" 
+                        title="All Bills" 
+                        value="bills"
+                        @click="tab = 'bills'"
+                        :active="tab === 'bills'"
+                        color="primary"
+                        rounded="lg"
+                    ></v-list-item>
+                    <v-list-item 
+                        prepend-icon="mdi-file-document-plus" 
+                        title="Generate Bill" 
+                        value="generate"
+                        @click="tab = 'generate'"
+                        :active="tab === 'generate'"
+                        color="primary"
+                        rounded="lg"
+                    ></v-list-item>
+                    <v-list-item 
+                        prepend-icon="mdi-message-question" 
+                        title="Inquiries" 
+                        value="inquiries"
+                        @click="tab = 'inquiries'"
+                        :active="tab === 'inquiries'"
+                        color="primary"
+                        rounded="lg"
+                    ></v-list-item>
+                </v-list>
+                
+                <template v-slot:append>
+                    <div class="pa-4">
+                        <v-btn block color="error" variant="tonal" @click="logout">
+                            <v-icon start>mdi-logout</v-icon> Logout
+                        </v-btn>
+                    </div>
+                </template>
+            </v-navigation-drawer>
+
+            <!-- App Bar -->
+            <v-app-bar elevation="0" border>
+                <v-app-bar-title class="font-weight-bold">
+                    {{ tab === 'customers' ? 'Customer Management' : tab === 'bills' ? 'Bill Management' : tab === 'generate' ? 'Generate Bill' : 'Customer Inquiries' }}
+                </v-app-bar-title>
+                <v-spacer></v-spacer>
+                <div class="mr-4 d-flex align-center">
+                    <v-avatar color="grey-lighten-3" class="mr-2">
+                        <v-icon>mdi-account</v-icon>
+                    </v-avatar>
+                    <div class="d-none d-sm-block">
+                        <div class="text-subtitle-2">{{ user.full_name }}</div>
+                        <div class="text-caption text-grey">{{ user.role }}</div>
+                    </div>
+                </div>
+            </v-app-bar>
+
+            <v-main class="bg-grey-lighten-4">
+                <v-container fluid class="pa-6">
+                    <v-window v-model="tab">
+                        <!-- Customers Tab -->
+                        <v-window-item value="customers">
+                            <v-card elevation="0">
+                                <v-toolbar color="white" class="px-4 border-b">
+                                    <v-toolbar-title class="text-h6">Customer List</v-toolbar-title>
+                                    <v-spacer></v-spacer>
+                                    <v-text-field
+                                        v-model="search"
+                                        label="Search customers..."
+                                        prepend-inner-icon="mdi-magnify"
+                                        variant="outlined"
+                                        density="compact"
+                                        hide-details
+                                        style="max-width: 300px"
+                                    ></v-text-field>
+                                </v-toolbar>
+                                
+                                <div v-if="!filteredCustomers || filteredCustomers.length === 0" class="text-center text-grey pa-8">
+                                    <v-icon size="64" color="grey-lighten-2" class="mb-4">mdi-account-off</v-icon>
+                                    <p>No customers found</p>
+                                </div>
+                                <v-table v-else hover class="ma-4 ">
+                                    <template v-slot:default>
+                                        <thead>
+                                            <tr class="bg-grey-lighten-5">
+                                                <th class="text-start">Username</th>
+                                                <th class="text-start">Full Name</th>
+                                                <th class="text-start">Email</th>
+                                                <th class="text-start">Phone</th>
+                                                <th class="text-start">Address</th>
+                                                <th class="text-start">Status</th>
+                                                <th class="text-end">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <template v-for="(customer, index) in filteredCustomers" :key="index">
+                                                <tr v-if="customer">
+                                                    <td>{{ customer.username || '-' }}</td>
+                                                    <td class="font-weight-medium">{{ customer.full_name || '-' }}</td>
+                                                    <td>{{ customer.email || '-' }}</td>
+                                                    <td>{{ customer.phone || '-' }}</td>
+                                                    <td class="text-truncate" style="max-width: 200px;">{{ customer.address || '-' }}</td>
+                                                    <td>
+                                                        <v-chip :color="customer.status === 'active' ? 'success' : 'error'" size="small" variant="flat">
+                                                            {{ customer.status || '-' }}
+                                                        </v-chip>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <v-btn size="small" variant="text" color="primary" icon @click="openCustomerDialog(customer)">
+                                                            <v-icon>mdi-pencil</v-icon>
+                                                        </v-btn>
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </template>
+                                </v-table>
+                            </v-card>
+                        </v-window-item>
+
+                        <!-- Bills Tab -->
+                        <v-window-item value="bills">
+                            <v-card elevation="0">
+                                <v-toolbar color="white" class="px-4 border-b">
+                                    <v-toolbar-title class="text-h6">All Bills</v-toolbar-title>
+                                    <v-spacer></v-spacer>
+                                    <v-text-field
+                                        v-model="billSearch"
+                                        label="Search bills..."
+                                        prepend-inner-icon="mdi-magnify"
+                                        variant="outlined"
+                                        density="compact"
+                                        hide-details
+                                        style="max-width: 300px"
+                                    ></v-text-field>
+                                </v-toolbar>
+                                
+                                <div v-if="!filteredBills || filteredBills.length === 0" class="text-center text-grey pa-8">
+                                    <v-icon size="64" color="grey-lighten-2" class="mb-4">mdi-file-document-off</v-icon>
+                                    <p>No bills found</p>
+                                </div>
+                                <v-table v-else hover class="ma-4 ">
+                                    <template v-slot:default>
+                                        <thead>
+                                            <tr class="bg-grey-lighten-5">
+                                                <th class="text-start">Bill ID</th>
+                                                <th class="text-start">Customer</th>
+                                                <th class="text-start">Bill Month</th>
+                                                <th class="text-start">Units</th>
+                                                <th class="text-start">Amount</th>
+                                                <th class="text-start">Due Date</th>
+                                                <th class="text-start">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <template v-for="(bill, index) in filteredBills" :key="index">
+                                                <tr v-if="bill">
+                                                    <td>#{{ bill.bill_id || '-' }}</td>
+                                                    <td>
+                                                        <div class="font-weight-medium">{{ bill.full_name || '-' }}</div>
+                                                        <div class="text-caption text-grey">{{ bill.email || '-' }}</div>
+                                                    </td>
+                                                    <td>{{ bill.bill_month || '-' }}</td>
+                                                    <td>{{ bill.units_consumed || '-' }}</td>
+                                                    <td class="font-weight-bold">RM {{ bill.total_amount || '-' }}</td>
+                                                    <td>{{ formatDate(bill.due_date) }}</td>
+                                                    <td>
+                                                        <v-chip :color="getStatusColor(bill.status)" size="small" variant="flat">
+                                                            {{ bill.status || '-' }}
+                                                        </v-chip>
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </template>
+                                </v-table>
+                            </v-card>
+                        </v-window-item>
+
+                        <!-- Generate Bill Tab -->
+                        <v-window-item value="generate">
+                            <v-row justify="center">
+                                <v-col cols="12" md="8" lg="6">
+                                    <v-card elevation="0">
+                                        <v-card-title class="pa-4 border-b">
+                                            <span class="text-h6">New Bill Details</span>
+                                        </v-card-title>
+                                        <v-card-text class="pa-6">
+                                            <v-form @submit.prevent="generateBill">
+                                                <v-row>
+                                                    <v-col cols="12">
+                                                        <v-select
+                                                            v-model="billForm.customer_id"
+                                                            :items="customers"
+                                                            item-title="full_name"
+                                                            item-value="user_id"
+                                                            label="Select Customer"
+                                                            variant="outlined"
+                                                            density="comfortable"
+                                                            prepend-inner-icon="mdi-account"
+                                                            required
+                                                        ></v-select>
+                                                    </v-col>
+                                                    <v-col cols="12" md="6">
+                                                        <v-text-field
+                                                            v-model="billForm.bill_month"
+                                                            label="Bill Month (MM-YYYY)"
+                                                            variant="outlined"
+                                                            density="comfortable"
+                                                            type="month"
+                                                            required
+                                                        ></v-text-field>
+                                                    </v-col>
+                                                    <v-col cols="12" md="6">
+                                                        <v-text-field
+                                                            v-model="billForm.due_date"
+                                                            label="Due Date"
+                                                            type="date"
+                                                            variant="outlined"
+                                                            density="comfortable"
+                                                            required
+                                                        ></v-text-field>
+                                                    </v-col>
+                                                    <v-col cols="12" md="6">
+                                                        <v-text-field
+                                                            v-model="billForm.previous_reading"
+                                                            label="Previous Reading"
+                                                            type="number"
+                                                            variant="outlined"
+                                                            density="comfortable"
+                                                            required
+                                                        ></v-text-field>
+                                                    </v-col>
+                                                    <v-col cols="12" md="6">
+                                                        <v-text-field
+                                                            v-model="billForm.current_reading"
+                                                            label="Current Reading"
+                                                            type="number"
+                                                            variant="outlined"
+                                                            density="comfortable"
+                                                            required
+                                                        ></v-text-field>
+                                                    </v-col>
+                                                    <v-col cols="12">
+                                                        <v-text-field
+                                                            v-model="billForm.rate_per_unit"
+                                                            label="Rate Per Unit (RM )"
+                                                            type="number"
+                                                            step="0.01"
+                                                            variant="outlined"
+                                                            density="comfortable"
+                                                            prefix="RM "
+                                                            required
+                                                        ></v-text-field>
+                                                    </v-col>
+                                                    <v-col cols="12" class="pt-4">
+                                                        <v-btn type="submit" color="primary" size="large" block flat :loading="billLoading">
+                                                            Generate Bill
+                                                        </v-btn>
+                                                    </v-col>
+                                                </v-row>
+                                            </v-form>
+                                        </v-card-text>
+                                    </v-card>
+                                </v-col>
+                            </v-row>
+                        </v-window-item>
+
+                        <!-- Inquiries Tab -->
+                        <v-window-item value="inquiries">
+                            <v-row>
+                                <v-col cols="12">
+                                    <div v-if="!inquiries || inquiries.length === 0" class="text-center text-grey pa-8">
+                                        <v-icon size="64" color="grey-lighten-2" class="mb-4">mdi-message-text-outline</v-icon>
+                                        <p>No inquiries found.</p>
+                                    </div>
+                                    <v-expansion-panels v-else variant="popout">
+                                        <v-expansion-panel v-for="inquiry in inquiries" :key="inquiry?.inquiry_id" elevation="0" class="mb-2">
+                                            <v-expansion-panel-title>
+                                                <div class="d-flex align-center w-100">
+                                                    <v-avatar color="primary" variant="tonal" size="32" class="mr-3">
+                                                        <span class="text-caption font-weight-bold">{{ inquiry?.full_name?.charAt(0) }}</span>
+                                                    </v-avatar>
+                                                    <div class="flex-grow-1">
+                                                        <div class="font-weight-medium">{{ inquiry?.subject || 'No Subject' }}</div>
+                                                        <div class="text-caption text-grey">{{ inquiry?.full_name }} • {{ formatDate(inquiry?.created_at) }}</div>
+                                                    </div>
+                                                    <v-chip :color="getInquiryStatusColor(inquiry?.status)" size="small" class="ml-2" variant="flat">
+                                                        {{ inquiry?.status }}
+                                                    </v-chip>
+                                                </div>
+                                            </v-expansion-panel-title>
+                                            <v-expansion-panel-text>
+                                                <div class="bg-grey-lighten-5 pa-4 rounded mb-4">
+                                                    <p class="mb-0">{{ inquiry?.message }}</p>
+                                                </div>
+                                                
+                                                <div v-if="inquiry?.status === 'resolved'">
+                                                    <div class="d-flex align-start">
+                                                        <v-icon color="success" class="mr-2 mt-1">mdi-check-circle</v-icon>
+                                                        <div>
+                                                            <div class="text-subtitle-2 text-success">Resolved</div>
+                                                            <p class="text-body-2 mb-1">{{ inquiry?.response }}</p>
+                                                            <div class="text-caption text-grey">Responded on {{ formatDate(inquiry?.responded_at) }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div v-else>
+                                                    <v-textarea
+                                                        v-model="inquiryResponse[inquiry?.inquiry_id]"
+                                                        label="Write a response..."
+                                                        variant="outlined"
+                                                        rows="3"
+                                                        auto-grow
+                                                    ></v-textarea>
+                                                    <div class="d-flex justify-end">
+                                                        <v-btn 
+                                                            color="primary" 
+                                                            @click="respondInquiry(inquiry?.inquiry_id)"
+                                                            :loading="inquiryLoading"
+                                                            flat
+                                                        >
+                                                            Send Response
+                                                        </v-btn>
+                                                    </div>
+                                                </div>
+                                            </v-expansion-panel-text>
+                                        </v-expansion-panel>
+                                    </v-expansion-panels>
+                                </v-col>
+                            </v-row>
+                        </v-window-item>
+                    </v-window>
+                </v-container>
+            </v-main>
+
+            <!-- Customer Edit Dialog -->
+            <v-dialog v-model="customerDialog" max-width="500">
+                <v-card rounded="lg">
+                    <v-card-title class="pa-4 border-b">
+                        Edit Customer Information
+                    </v-card-title>
+                    <v-card-text class="pa-4">
+                        <v-form @submit.prevent="saveCustomer">
+                            <v-row dense>
+                                <v-col cols="12">
+                                    <v-text-field
+                                        v-model="customerForm.full_name"
+                                        label="Full Name"
+                                        variant="outlined"
+                                        density="comfortable"
+                                        required
+                                    ></v-text-field>
+                                </v-col>
+                                <v-col cols="12">
+                                    <v-text-field
+                                        v-model="customerForm.email"
+                                        label="Email"
+                                        type="email"
+                                        variant="outlined"
+                                        density="comfortable"
+                                        required
+                                    ></v-text-field>
+                                </v-col>
+                                <v-col cols="12">
+                                    <v-text-field
+                                        v-model="customerForm.phone"
+                                        label="Phone"
+                                        variant="outlined"
+                                        density="comfortable"
+                                    ></v-text-field>
+                                </v-col>
+                                <v-col cols="12">
+                                    <v-textarea
+                                        v-model="customerForm.address"
+                                        label="Address"
+                                        variant="outlined"
+                                        density="comfortable"
+                                        rows="2"
+                                    ></v-textarea>
+                                </v-col>
+                                <v-col cols="12">
+                                    <v-select
+                                        v-model="customerForm.status"
+                                        :items="['active', 'inactive']"
+                                        label="Status"
+                                        variant="outlined"
+                                        density="comfortable"
+                                    ></v-select>
+                                </v-col>
+                            </v-row>
+                        </v-form>
+                    </v-card-text>
+                    <v-divider></v-divider>
+                    <v-card-actions class="pa-4">
+                        <v-spacer></v-spacer>
+                        <v-btn variant="text" @click="customerDialog = false">Cancel</v-btn>
+                        <v-btn color="primary" variant="flat" @click="saveCustomer" :loading="customerLoading">
+                            Update Customer
+                        </v-btn>
+                    </v-card-actions>
+                </v-card>
+            </v-dialog>
+
+            <v-snackbar v-model="snackbar" :color="snackbarColor" location="top right">
+                {{ snackbarText }}
+            </v-snackbar>
+        </v-app>
+    </div>
+
+    <script src="https://unpkg.com/vue@3.3.4/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@3.3.15/dist/vuetify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.5.0/dist/axios.min.js"></script>
+    <script src="../js/staff.js"></script>
+</body>
+</html>

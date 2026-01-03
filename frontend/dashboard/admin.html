@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Electricity Billing</title>
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@3.3.15/dist/vuetify.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <v-app theme="light">
+            <!-- Navigation Drawer -->
+            <v-navigation-drawer permanent app color="white" elevation="1">
+                <div class="d-flex align-center pa-4">
+                    <v-avatar color="primary" size="40" class="mr-3">
+                        <v-icon color="white">mdi-flash</v-icon>
+                    </v-avatar>
+                    <div>
+                        <div class="text-h6 font-weight-bold">PowerBill</div>
+                        <div class="text-caption text-grey">Admin Portal</div>
+                    </div>
+                </div>
+                
+                <v-divider></v-divider>
+
+                <v-list nav class="mt-2">
+                    <v-list-item 
+                        prepend-icon="mdi-account-group" 
+                        title="User Management" 
+                        value="users"
+                        @click="tab = 'users'"
+                        :active="tab === 'users'"
+                        color="primary"
+                        rounded="lg"
+                    ></v-list-item>
+                    <v-list-item 
+                        prepend-icon="mdi-message-question" 
+                        title="Inquiries" 
+                        value="inquiries"
+                        @click="tab = 'inquiries'"
+                        :active="tab === 'inquiries'"
+                        color="primary"
+                        rounded="lg"
+                    ></v-list-item>
+                </v-list>
+                
+                <template v-slot:append>
+                    <div class="pa-4">
+                        <v-btn block color="error" variant="tonal" @click="logout">
+                            <v-icon start>mdi-logout</v-icon> Logout
+                        </v-btn>
+                    </div>
+                </template>
+            </v-navigation-drawer>
+
+            <!-- App Bar -->
+            <v-app-bar elevation="0" border>
+                <v-app-bar-title class="font-weight-bold">
+                    {{ tab === 'users' ? 'User Management' : 'Customer Inquiries' }}
+                </v-app-bar-title>
+                <v-spacer></v-spacer>
+                <div class="mr-4 d-flex align-center">
+                    <v-avatar color="grey-lighten-3" class="mr-2">
+                        <v-icon>mdi-account</v-icon>
+                    </v-avatar>
+                    <div class="d-none d-sm-block">
+                        <div class="text-subtitle-2">{{ user.full_name }}</div>
+                        <div class="text-caption text-grey">{{ user.role }}</div>
+                    </div>
+                </div>
+            </v-app-bar>
+
+            <!-- Main Content -->
+            <v-main class="bg-grey-lighten-4">
+                <v-container fluid class="pa-6">
+                    <v-window v-model="tab">
+                        <!-- Users Tab -->
+                        <v-window-item value="users">
+                            <v-row>
+                                <v-col cols="12">
+                                    <v-card elevation="0">
+                                        <v-toolbar color="white" class="px-4 border-b">
+                                            <v-toolbar-title class="text-h6">All Users</v-toolbar-title>
+                                            <v-spacer></v-spacer>
+                                            <v-btn color="primary" variant="flat" @click="openUserDialog()">
+                                                <v-icon start>mdi-plus</v-icon> Add User
+                                            </v-btn>
+                                        </v-toolbar>
+                                        
+                                        <div v-if="!users || users.length === 0" class="text-center text-grey pa-8">
+                                            <v-icon size="64" color="grey-lighten-2" class="mb-4">mdi-account-off</v-icon>
+                                            <p>No users found or loading...</p>
+                                        </div>
+                                        <v-table v-else hover class="ma-4 ">
+                                            <template v-slot:default>
+                                                <thead>
+                                                    <tr class="bg-grey-lighten-5">
+                                                        <th class="font-weight-bold text-start">User</th>
+                                                        <th class="font-weight-bold text-start">Role</th>
+                                                        <th class="font-weight-bold text-start">Status</th>
+                                                        <th class="text-end font-weight-bold">Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <template v-for="(userItem, index) in users" :key="index">
+                                                        <tr v-if="userItem">
+                                                            <td class="py-3">
+                                                                <div class="d-flex align-center">
+                                                                    <v-avatar color="primary" variant="tonal" size="32" class="mr-3">
+                                                                        <span class="text-caption font-weight-bold">{{ userItem.full_name?.charAt(0) }}</span>
+                                                                    </v-avatar>
+                                                                    <div>
+                                                                        <div class="font-weight-medium">{{ userItem.full_name }}</div>
+                                                                        <div class="text-caption text-grey">{{ userItem.email }}</div>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td>
+                                                                <v-chip size="small" label class="text-capitalize" :color="userItem.role === 'admin' ? 'purple' : userItem.role === 'staff' ? 'blue' : 'grey'">
+                                                                    {{ userItem.role }}
+                                                                </v-chip>
+                                                            </td>
+                                                            <td>
+                                                                <v-chip :color="userItem.status === 'active' ? 'success' : 'error'" size="small" variant="flat">
+                                                                    {{ userItem.status }}
+                                                                </v-chip>
+                                                            </td>
+                                                            <td class="text-end">
+                                                                <v-btn size="small" variant="text" color="primary" icon @click="openUserDialog(userItem)">
+                                                                    <v-icon>mdi-pencil</v-icon>
+                                                                </v-btn>
+                                                                <v-btn size="small" variant="text" color="error" icon @click="deleteUser(userItem.user_id)">
+                                                                    <v-icon>mdi-delete</v-icon>
+                                                                </v-btn>
+                                                            </td>
+                                                        </tr>
+                                                    </template>
+                                                </tbody>
+                                            </template>
+                                        </v-table>
+                                    </v-card>
+                                </v-col>
+                            </v-row>
+                        </v-window-item>
+
+                        <!-- Inquiries Tab -->
+                        <v-window-item value="inquiries">
+                            <v-row>
+                                <v-col cols="12">
+                                    <div v-if="!inquiries || inquiries.length === 0" class="text-center text-grey pa-8">
+                                        <v-icon size="64" color="grey-lighten-2" class="mb-4">mdi-message-text-outline</v-icon>
+                                        <p>No inquiries found.</p>
+                                    </div>
+                                    <v-expansion-panels v-else variant="popout">
+                                        <v-expansion-panel v-for="inquiry in inquiries" :key="inquiry?.inquiry_id" elevation="0" class="mb-2">
+                                            <v-expansion-panel-title>
+                                                <div class="d-flex align-center w-100">
+                                                    <v-avatar color="primary" variant="tonal" size="32" class="mr-3">
+                                                        <span class="text-caption font-weight-bold">{{ inquiry?.full_name?.charAt(0) }}</span>
+                                                    </v-avatar>
+                                                    <div class="flex-grow-1">
+                                                        <div class="font-weight-medium">{{ inquiry?.subject || 'No Subject' }}</div>
+                                                        <div class="text-caption text-grey">{{ inquiry?.full_name }} • {{ formatDate(inquiry?.created_at) }}</div>
+                                                    </div>
+                                                    <v-chip :color="getInquiryStatusColor(inquiry?.status)" size="small" class="ml-2" variant="flat">
+                                                        {{ inquiry?.status }}
+                                                    </v-chip>
+                                                </div>
+                                            </v-expansion-panel-title>
+                                            <v-expansion-panel-text>
+                                                <div class="bg-grey-lighten-5 pa-4 rounded mb-4">
+                                                    <p class="mb-0">{{ inquiry?.message }}</p>
+                                                </div>
+                                                
+                                                <div v-if="inquiry?.status === 'resolved'">
+                                                    <div class="d-flex align-start">
+                                                        <v-icon color="success" class="mr-2 mt-1">mdi-check-circle</v-icon>
+                                                        <div>
+                                                            <div class="text-subtitle-2 text-success">Resolved</div>
+                                                            <p class="text-body-2 mb-1">{{ inquiry?.response }}</p>
+                                                            <div class="text-caption text-grey">Responded on {{ formatDate(inquiry?.responded_at) }}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div v-else>
+                                                    <v-textarea
+                                                        v-model="inquiryResponse[inquiry?.inquiry_id]"
+                                                        label="Write a response..."
+                                                        variant="outlined"
+                                                        rows="3"
+                                                        auto-grow
+                                                    ></v-textarea>
+                                                    <div class="d-flex justify-end">
+                                                        <v-btn 
+                                                            color="primary" 
+                                                            @click="respondInquiry(inquiry?.inquiry_id)"
+                                                            :loading="inquiryLoading"
+                                                            flat
+                                                        >
+                                                            Send Response
+                                                        </v-btn>
+                                                    </div>
+                                                </div>
+                                            </v-expansion-panel-text>
+                                        </v-expansion-panel>
+                                    </v-expansion-panels>
+                                </v-col>
+                            </v-row>
+                        </v-window-item>
+                    </v-window>
+                </v-container>
+            </v-main>
+
+            <!-- User Dialog -->
+            <v-dialog v-model="userDialog" max-width="500">
+                <v-card rounded="lg">
+                    <v-card-title class="pa-4 border-b">
+                        {{ editingUser ? 'Edit User' : 'Add New User' }}
+                    </v-card-title>
+                    <v-card-text class="pa-4">
+                        <v-form @submit.prevent="saveUser">
+                            <v-row dense>
+                                <v-col cols="12">
+                                    <v-text-field
+                                        v-model="userForm.username"
+                                        label="Username"
+                                        variant="outlined"
+                                        density="comfortable"
+                                        :disabled="editingUser"
+                                        required
+                                    ></v-text-field>
+                                </v-col>
+                                <v-col cols="12" v-if="!editingUser">
+                                    <v-text-field
+                                        v-model="userForm.password"
+                                        label="Password"
+                                        type="password"
+                                        variant="outlined"
+                                        density="comfortable"
+                                        required
+                                    ></v-text-field>
+                                </v-col>
+                                <v-col cols="12">
+                                    <v-text-field
+                                        v-model="userForm.full_name"
+                                        label="Full Name"
+                                        variant="outlined"
+                                        density="comfortable"
+                                        required
+                                    ></v-text-field>
+                                </v-col>
+                                <v-col cols="12">
+                                    <v-text-field
+                                        v-model="userForm.email"
+                                        label="Email"
+                                        type="email"
+                                        variant="outlined"
+                                        density="comfortable"
+                                        required
+                                    ></v-text-field>
+                                </v-col>
+                                <v-col cols="12" md="6">
+                                    <v-select
+                                        v-model="userForm.role"
+                                        :items="['customer', 'admin', 'staff']"
+                                        label="Role"
+                                        variant="outlined"
+                                        density="comfortable"
+                                        :disabled="editingUser"
+                                        required
+                                    ></v-select>
+                                </v-col>
+                                <v-col cols="12" md="6">
+                                    <v-text-field
+                                        v-model="userForm.phone"
+                                        label="Phone"
+                                        variant="outlined"
+                                        density="comfortable"
+                                    ></v-text-field>
+                                </v-col>
+                                <v-col cols="12">
+                                    <v-textarea
+                                        v-model="userForm.address"
+                                        label="Address"
+                                        variant="outlined"
+                                        density="comfortable"
+                                        rows="2"
+                                    ></v-textarea>
+                                </v-col>
+                                <v-col cols="12" v-if="editingUser">
+                                    <v-select
+                                        v-model="userForm.status"
+                                        :items="['active', 'inactive']"
+                                        label="Status"
+                                        variant="outlined"
+                                        density="comfortable"
+                                    ></v-select>
+                                </v-col>
+                            </v-row>
+                        </v-form>
+                    </v-card-text>
+                    <v-divider></v-divider>
+                    <v-card-actions class="pa-4">
+                        <v-spacer></v-spacer>
+                        <v-btn variant="text" @click="userDialog = false">Cancel</v-btn>
+                        <v-btn color="primary" variant="flat" @click="saveUser" :loading="userLoading">
+                            {{ editingUser ? 'Update User' : 'Create User' }}
+                        </v-btn>
+                    </v-card-actions>
+                </v-card>
+            </v-dialog>
+
+            <v-snackbar v-model="snackbar" :color="snackbarColor" location="top right">
+                {{ snackbarText }}
+            </v-snackbar>
+        </v-app>
+    </div>
+
+    <script src="https://unpkg.com/vue@3.3.4/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@3.3.15/dist/vuetify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.5.0/dist/axios.min.js"></script>
+    <script src="../js/admin.js"></script>
+</body>
+</html>
