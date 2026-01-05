@@ -27,7 +27,7 @@ This system provides a secure platform for managing electricity billing with thr
 ## 📁 Project Structure
 
 ```
-powerbill-billing-system/
+power-billing-system/
 ├── backend/
 │   ├── api/
 │   │   ├── auth/
@@ -94,7 +94,7 @@ powerbill-billing-system/
 
 **Verify Installation:**
 ```
-http://localhost/powerbill-billing-system/backend/test
+http://localhost/power-billing-system/backend/test
 ```
 
 #### 3. Setup Database
@@ -124,7 +124,7 @@ $password = "Web#123";
 
 **Open Browser:**
 ```
-http://localhost/powerbill-billing-system/frontend/index.html
+http://localhost/power-billing-system/frontend/index.html
 ```
 
 ## 🔑 Demo Accounts

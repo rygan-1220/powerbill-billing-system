@@ -113,7 +113,7 @@ GO
 IF NOT EXISTS (SELECT * FROM users WHERE username = 'admin')
 BEGIN
     INSERT INTO users (username, password, email, full_name, role, phone, address)
-    VALUES ('admin', 'admin123', 'admin@electric.com', 'System Administrator', 'admin', '1234567890', 'Admin Office');
+    VALUES ('admin', '$2y$10$iUzKJfRboQtmZU3YnNOqTOOTNH.r05TRCwecRKxJsF1OZJ77atFy2', 'admin@electric.com', 'System Administrator', 'admin', '1234567890', 'Admin Office');
 END
 GO
 
@@ -121,7 +121,7 @@ GO
 IF NOT EXISTS (SELECT * FROM users WHERE username = 'customer1')
 BEGIN
     INSERT INTO users (username, password, email, full_name, role, phone, address)
-    VALUES ('customer1', 'customer123', 'customer1@email.com', 'John Doe', 'customer', '9876543210', '123 Main Street');
+    VALUES ('customer1', '$2y$10$qx3LdB9Us1O4WjIRF/Sgfeaq8R8ToRXxMxgb.K5cNvjt3f0Xzhk2.', 'customer1@email.com', 'John Doe', 'customer', '9876543210', '123 Main Street');
 END
 GO
 
@@ -129,7 +129,7 @@ GO
 IF NOT EXISTS (SELECT * FROM users WHERE username = 'staff1')
 BEGIN
     INSERT INTO users (username, password, email, full_name, role, phone, address)
-    VALUES ('staff1', 'staff123', 'staff1@electric.com', 'Jane Smith', 'staff', '5551234567', 'Staff Office');
+    VALUES ('staff1', '$2y$10$cxgyFEp1lr.w.OkUTZgje..yN9t66B5jUE9PQKlHTC2/24gXqvaOK', 'staff1@electric.com', 'Jane Smith', 'staff', '5551234567', 'Staff Office');
 END
 GO
 

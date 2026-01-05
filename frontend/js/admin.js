@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost/powerbill-billing-system/backend/api';
+const API_BASE_URL = 'http://localhost/power-billing-system/backend/api';
 
 const { createApp } = Vue;
 const { createVuetify } = Vuetify;
