@@ -196,7 +196,7 @@
                                                     </td>
                                                     <td>{{ bill.bill_month || '-' }}</td>
                                                     <td>{{ bill.units_consumed || '-' }}</td>
-                                                    <td class="font-weight-bold">RM {{ bill.total_amount || '-' }}</td>
+                                                    <td class="font-weight-bold">RM {{ formatAmount(bill.total_amount) }}</td>
                                                     <td>{{ formatDate(bill.due_date) }}</td>
                                                     <td>
                                                         <v-chip :color="getStatusColor(bill.status)" size="small" variant="flat">

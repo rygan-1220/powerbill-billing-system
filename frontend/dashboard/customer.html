@@ -151,7 +151,7 @@
                                                     <tr v-for="item in bills.slice(0, 5)" :key="item.bill_id">
                                                         <td>{{ item.bill_month || '-' }}</td>
                                                         <td>{{ item.units_consumed || '-' }}</td>
-                                                        <td class="font-weight-bold">RM {{ item.total_amount || '-' }}</td>
+                                                        <td class="font-weight-bold">RM {{ formatAmount(item.total_amount) }}</td>
                                                         <td>{{ formatDate(item.due_date) }}</td>
                                                         <td>
                                                             <v-chip :color="getStatusColor(item.status)" size="small" variant="flat">
@@ -203,7 +203,7 @@
                                             <tr v-for="item in bills" :key="item.bill_id">
                                                 <td>{{ item.bill_month || '-' }}</td>
                                                 <td>{{ item.units_consumed || '-' }}</td>
-                                                <td class="font-weight-bold">RM {{ item.total_amount || '-' }}</td>
+                                                <td class="font-weight-bold">RM {{ formatAmount(item.total_amount) }}</td>
                                                 <td>{{ formatDate(item.due_date) }}</td>
                                                 <td>
                                                     <v-chip :color="getStatusColor(item.status)" size="small" variant="flat">
@@ -403,7 +403,7 @@
                                 </div>
                                 <div class="d-flex justify-space-between">
                                     <span class="text-grey-darken-2">Amount Due:</span>
-                                    <span class="text-h6 text-primary font-weight-bold">RM {{ selectedBill.total_amount }}</span>
+                                    <span class="text-h6 text-primary font-weight-bold">RM {{ formatAmount(selectedBill.total_amount) }}</span>
                                 </div>
                             </div>
                             

@@ -326,6 +326,10 @@ createApp({
             const date = new Date(dateString);
             return date.toLocaleDateString();
         },
+        formatAmount(amount) {
+            if (amount === '-' || amount === null || amount === undefined) return '-';
+            return parseFloat(amount).toFixed(2);
+        },
         showSnackbar(text, color = 'success') {
             this.snackbarText = text;
             this.snackbarColor = color;
